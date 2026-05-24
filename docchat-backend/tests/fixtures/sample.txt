@@ -1,0 +1,10 @@
+DocChat AI Sample Document
+
+
+This  is   a   sample		paragraph with irregular    spacing.
+
+RAG stands for Retrieval-Augmented Generation.
+
+
+
+Multiple blank lines above should collapse to one.
