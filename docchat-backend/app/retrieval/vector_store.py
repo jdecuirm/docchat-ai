@@ -71,6 +71,11 @@ class VectorStore:
         if not chunks:
             return
 
+        if len(embeddings) != len(chunks):
+            raise ValueError(
+                f"Expected {len(chunks)} embeddings, got {len(embeddings)}."
+            )
+
         filename = chunks[0].metadata.source_filename
         self.delete_document(filename)
 

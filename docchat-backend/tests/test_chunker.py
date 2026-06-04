@@ -145,7 +145,7 @@ def test_chunk_document_index_starts_at_1():
 
 
 # ---------------------------------------------------------------------------
-# chunk_document behavioral tests (non-slow: tokenizer cached from prior tests)
+# chunk_document behavioral tests (slow: loads tokenizer via @lru_cache)
 # ---------------------------------------------------------------------------
 
 

@@ -138,7 +138,7 @@ def chunk_document(parsed: ParsedDocument) -> list[Chunk]:
                 f"Chunk text not found in full_text after retry: {text[:50]!r}"
             )
         page_num = _page_for_position(pos, page_ranges)
-        search_offset = pos + 1
+        search_offset = pos + max(1, len(text) - settings.chunk_overlap)
 
         chunks.append(
             Chunk(
