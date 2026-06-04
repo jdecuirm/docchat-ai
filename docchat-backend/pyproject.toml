@@ -16,6 +16,7 @@ dependencies = [
     "python-docx>=1.2.0",
     "python-multipart>=0.0.29",
     "sentence-transformers>=5.5.1",
+    "transformers>=5.9.0",
     "uvicorn[standard]>=0.47.0",
 ]
 
@@ -23,4 +24,9 @@ dependencies = [
 dev = [
     "pytest>=9.0.3",
     "ruff>=0.15.14",
+]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: marks tests as slow (model loading) -- skip with: pytest -m 'not slow'",
 ]
