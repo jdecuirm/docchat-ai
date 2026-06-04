@@ -142,3 +142,88 @@ def test_chunk_document_index_starts_at_1():
     with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
         chunks = chunk_document(doc)
     assert chunks[0].metadata.chunk_index == 1
+
+
+# ---------------------------------------------------------------------------
+# chunk_document behavioral tests (non-slow: tokenizer cached from prior tests)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_single_page_all_chunks_have_page_1():
+    """All chunks from a 1-page doc must have page_number == 1."""
+    doc = make_doc(["word " * 400])
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    assert len(chunks) >= 1
+    assert all(c.metadata.page_number == 1 for c in chunks)
+
+
+@pytest.mark.slow
+def test_multi_page_first_chunk_on_page_1():
+    """First chunk of a multi-page doc must originate on page 1."""
+    page1 = "alpha " * 300
+    page2 = "beta " * 300
+    doc = make_doc([page1, page2])
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    assert chunks[0].metadata.page_number == 1
+
+
+@pytest.mark.slow
+def test_multi_page_last_chunk_on_last_page():
+    """Last chunk of a multi-page doc must originate on the last page."""
+    page1 = "alpha " * 300
+    page2 = "beta " * 300
+    doc = make_doc([page1, page2])
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    assert chunks[-1].metadata.page_number == 2
+
+
+@pytest.mark.slow
+def test_chunk_index_sequential_no_gaps():
+    """chunk_index is sequential from 1 with no gaps."""
+    doc = make_doc(["word " * 600])
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    indices = [c.metadata.chunk_index for c in chunks]
+    assert indices == list(range(1, len(chunks) + 1))
+
+
+@pytest.mark.slow
+def test_no_empty_chunks():
+    """Chunker never returns empty-text chunks."""
+    doc = make_doc(["sentence number one. " * 300])
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    assert all(c.text.strip() for c in chunks)
+
+
+@pytest.mark.slow
+def test_source_filename_preserved():
+    """source_filename matches the ParsedDocument filename on every chunk."""
+    doc = make_doc(["hello world " * 200], filename="report.pdf")
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    assert all(c.metadata.source_filename == "report.pdf" for c in chunks)
+
+
+@pytest.mark.slow
+def test_short_doc_produces_at_least_one_chunk():
+    """A short document produces at least 1 chunk."""
+    doc = make_doc(["This is a short document."])
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    assert len(chunks) >= 1
+
+
+@pytest.mark.slow
+def test_three_page_doc_page_attribution():
+    """Chunks from a 3-page doc span all three page numbers."""
+    doc = make_doc(["page one " * 300, "page two " * 300, "page three " * 300])
+    with patch("app.ingestion.chunker.get_settings", return_value=_make_settings_stub()):
+        chunks = chunk_document(doc)
+    page_numbers = {c.metadata.page_number for c in chunks}
+    assert 1 in page_numbers
+    assert 3 in page_numbers
