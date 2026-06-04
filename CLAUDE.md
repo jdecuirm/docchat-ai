@@ -65,14 +65,14 @@ docchat-ai/
 ## Config defaults (app/config.py via pydantic-settings)
 LLM_PROVIDER=ollama
 OLLAMA_BASE_URL=http://localhost:11434
-OLLAMA_MODEL=llama3.2
+OLLAMA_MODEL=llama3.2:3b
 ANTHROPIC_API_KEY=(optional)
 CLAUDE_MODEL=claude-haiku-4-5
 EMBEDDING_MODEL=BAAI/bge-small-en-v1.5
 RERANKER_MODEL=BAAI/bge-reranker-base
 CHROMA_PERSIST_DIR=./chroma_data
-CHUNK_SIZE=512
-CHUNK_OVERLAP=50
+CHUNK_SIZE=512 (tokens, measured with the embedding model's tokenizer)
+CHUNK_OVERLAP=50 (tokens)
 TOP_K_RETRIEVAL=10
 TOP_K_RERANK=4
 
