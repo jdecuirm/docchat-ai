@@ -1,7 +1,7 @@
 [project]
 name = "docchat-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "RAG chatbot backend: document ingestion, chunking, embedding, and retrieval"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

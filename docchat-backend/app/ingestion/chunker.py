@@ -13,6 +13,8 @@ from app.ingestion.parser import ParsedDocument, ParsedPage
 
 __all__ = ["ChunkMetadata", "Chunk", "chunk_document"]
 
+_PAGE_SEPARATOR = "\n\n"
+
 
 class ChunkMetadata(BaseModel):
     """Citation metadata attached to every chunk.
@@ -111,10 +113,9 @@ def chunk_document(parsed: ParsedDocument) -> list[Chunk]:
         Chunks in document order with 1-indexed chunk_index.
     """
     settings = get_settings()
-    separator = "\n\n"
 
-    full_text = separator.join(page.text for page in parsed.pages)
-    page_ranges = _build_page_ranges(parsed.pages, separator)
+    full_text = _PAGE_SEPARATOR.join(page.text for page in parsed.pages)
+    page_ranges = _build_page_ranges(parsed.pages, _PAGE_SEPARATOR)
 
     tokenizer = _get_tokenizer()
     splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(
@@ -132,6 +133,10 @@ def chunk_document(parsed: ParsedDocument) -> list[Chunk]:
         pos = full_text.find(text, search_offset)
         if pos == -1:
             pos = full_text.find(text)
+        if pos == -1:
+            raise RuntimeError(
+                f"Chunk text not found in full_text after retry: {text[:50]!r}"
+            )
         page_num = _page_for_position(pos, page_ranges)
         search_offset = pos + 1
 
