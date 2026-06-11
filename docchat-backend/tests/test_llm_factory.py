@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
+import pytest
 from pydantic import SecretStr
 
 
@@ -64,5 +65,21 @@ def test_factory_is_singleton(monkeypatch) -> None:
     client1 = llm_module.get_llm_client()
     client2 = llm_module.get_llm_client()
     assert client1 is client2
+
+    llm_module.get_llm_client.cache_clear()
+
+
+def test_factory_raises_on_unknown_provider(monkeypatch) -> None:
+    """get_llm_client() raises ValueError for unknown providers."""
+    import app.llm as llm_module
+
+    mock_settings = MagicMock()
+    mock_settings.llm_provider = "openai"
+
+    llm_module.get_llm_client.cache_clear()
+    monkeypatch.setattr("app.llm.get_settings", lambda: mock_settings)
+
+    with pytest.raises(ValueError, match="Unknown LLM provider"):
+        llm_module.get_llm_client()
 
     llm_module.get_llm_client.cache_clear()

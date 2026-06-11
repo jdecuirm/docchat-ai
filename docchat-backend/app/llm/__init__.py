@@ -39,4 +39,8 @@ def get_llm_client() -> BaseLLMClient:
     settings = get_settings()
     if settings.llm_provider == "ollama":
         return OllamaClient()
-    return ClaudeClient()
+    elif settings.llm_provider == "claude":
+        return ClaudeClient()
+    raise ValueError(
+        f"Unknown LLM provider: {settings.llm_provider!r}. Expected 'ollama' or 'claude'."
+    )
