@@ -13,9 +13,20 @@ from pydantic import BaseModel
 from app.ingestion.chunker import chunk_document
 from app.ingestion.embedder import embed_texts
 from app.ingestion.parser import parse_document
-from app.retrieval.vector_store import get_vector_store
 
-__all__ = ["IngestionResult", "ingest_document"]
+__all__ = ["IngestionResult", "ingest_document", "get_vector_store"]
+
+
+def get_vector_store():
+    """Import and return the cached vector store (deferred to avoid circular imports).
+
+    This function exists solely to allow test fixtures to patch
+    app.ingestion.get_vector_store. For normal use, use the version
+    imported directly from app.retrieval.vector_store.
+    """
+    from app.retrieval.vector_store import get_vector_store as _get_vector_store
+
+    return _get_vector_store()
 
 
 class IngestionResult(BaseModel):

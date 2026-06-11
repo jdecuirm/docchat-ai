@@ -13,8 +13,9 @@ from pydantic import BaseModel
 from sentence_transformers import CrossEncoder
 
 from app.config import get_settings
+from app.retrieval.vector_store import RetrievedChunk
 
-__all__ = ["RankedChunk"]
+__all__ = ["RankedChunk", "rerank"]
 
 
 class RankedChunk(BaseModel):
@@ -46,3 +47,39 @@ def _get_reranker() -> CrossEncoder:
     """
     settings = get_settings()
     return CrossEncoder(settings.reranker_model)
+
+
+def rerank(
+    query: str,
+    chunks: list[RetrievedChunk],
+    top_k: int,
+) -> list[RankedChunk]:
+    """Score and re-rank candidate chunks using the BGE cross-encoder.
+
+    Args:
+        query: The user's search query.
+        chunks: Candidate chunks from the vector store (unordered).
+        top_k: Maximum number of results to return.
+
+    Returns:
+        Up to ``top_k`` :class:`RankedChunk` objects ordered by descending
+        relevance score. Returns an empty list when ``chunks`` is empty.
+    """
+    if not chunks:
+        return []
+
+    pairs = [(query, chunk.text) for chunk in chunks]
+    scores = _get_reranker().predict(pairs)
+
+    scored = sorted(zip(chunks, scores), key=lambda x: x[1], reverse=True)
+
+    return [
+        RankedChunk(
+            text=chunk.text,
+            source_filename=chunk.source_filename,
+            page_number=chunk.page_number,
+            chunk_index=chunk.chunk_index,
+            relevance_score=float(score),
+        )
+        for chunk, score in scored[:top_k]
+    ]
