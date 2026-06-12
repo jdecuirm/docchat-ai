@@ -35,8 +35,8 @@ export default function DropZone({ onUpload }) {
     setIsDragging(true);
   }
 
-  function handleDragLeave() {
-    setIsDragging(false);
+  function handleDragLeave(e) {
+    if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false);
   }
 
   function handleInputChange(e) {
@@ -47,10 +47,10 @@ export default function DropZone({ onUpload }) {
 
   return (
     <div>
-      <label
+      <div
         data-testid="drop-zone"
         className={[
-          "flex flex-col items-center justify-center gap-2 p-4 rounded-lg cursor-pointer",
+          "flex flex-col items-center justify-center gap-2 p-4 rounded-lg",
           "border-2 border-dashed transition-colors",
           isDragging
             ? "border-accent bg-surface-raised"
@@ -60,20 +60,28 @@ export default function DropZone({ onUpload }) {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <input
-          type="file"
-          accept=".pdf,.docx"
-          className="sr-only"
-          onChange={handleInputChange}
-        />
-        <span className="text-2xl">📂</span>
-        <span className="text-text-muted text-sm text-center">
-          Drop PDF / DOCX here
-        </span>
-        <span className="text-accent text-sm font-medium">
-          or click to browse
-        </span>
-      </label>
+        <label
+          htmlFor="dz-file-input"
+          className="flex flex-col items-center gap-2 cursor-pointer w-full"
+        >
+          <input
+            id="dz-file-input"
+            type="file"
+            accept=".pdf,.docx"
+            className="sr-only"
+            onChange={handleInputChange}
+          />
+          <span aria-hidden="true" className="text-2xl">
+            📂
+          </span>
+          <span className="text-text-muted text-sm text-center">
+            Drop PDF / DOCX here
+          </span>
+          <span className="text-accent text-sm font-medium">
+            or click to browse
+          </span>
+        </label>
+      </div>
       {error && <p className="mt-2 text-red-400 text-xs">{error}</p>}
     </div>
   );

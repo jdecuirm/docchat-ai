@@ -5,7 +5,7 @@ export default function DocumentItem({ filename, onDelete }) {
         className="text-text-primary text-sm truncate flex-1"
         title={filename}
       >
-        📄 {filename}
+        <span aria-hidden="true">📄</span> {filename}
       </span>
       <button
         onClick={() => onDelete(filename)}
