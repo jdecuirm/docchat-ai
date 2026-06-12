@@ -1,0 +1,54 @@
+"""Tests for the RAG pipeline: build_prompt and rag_answer."""
+
+from __future__ import annotations
+
+from app.retrieval.reranker import RankedChunk
+
+
+def _make_chunk(text: str, chunk_index: int = 1, page: int = 1) -> RankedChunk:
+    return RankedChunk(
+        text=text,
+        source_filename="doc.pdf",
+        page_number=page,
+        chunk_index=chunk_index,
+        relevance_score=0.9,
+    )
+
+
+def test_build_prompt_includes_chunk_text() -> None:
+    """Each chunk's text appears verbatim in the assembled prompt."""
+    from app.rag.pipeline import build_prompt
+
+    chunk = _make_chunk("Paris is the capital of France.")
+    prompt = build_prompt("What is the capital?", [chunk])
+
+    assert "Paris is the capital of France." in prompt
+
+
+def test_build_prompt_numbers_sources() -> None:
+    """Chunks are numbered [1], [2], etc. in order."""
+    from app.rag.pipeline import build_prompt
+
+    chunks = [_make_chunk("First chunk.", 1), _make_chunk("Second chunk.", 2)]
+    prompt = build_prompt("Query?", chunks)
+
+    assert "[1]" in prompt
+    assert "[2]" in prompt
+
+
+def test_build_prompt_empty_chunks() -> None:
+    """When no chunks are available, the no-context message is included."""
+    from app.rag.pipeline import build_prompt
+
+    prompt = build_prompt("Query?", [])
+
+    assert "No relevant context" in prompt
+
+
+def test_build_prompt_includes_query() -> None:
+    """The user query appears at the end of the assembled prompt."""
+    from app.rag.pipeline import build_prompt
+
+    prompt = build_prompt("What are the main risks?", [])
+
+    assert "What are the main risks?" in prompt
