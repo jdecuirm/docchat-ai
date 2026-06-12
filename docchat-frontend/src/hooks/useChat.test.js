@@ -98,4 +98,28 @@ describe("useChat", () => {
       "Error: something went wrong",
     );
   });
+
+  it("handles token in final chunk without trailing newline", async () => {
+    const encoder = new TextEncoder();
+    const chunks = ["data: Hello\n\n", "data:  world"]; // last chunk has no \n\n; double-space gives " world" payload
+    let i = 0;
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      body: {
+        getReader() {
+          return {
+            async read() {
+              if (i >= chunks.length) return { done: true, value: undefined };
+              return { done: false, value: encoder.encode(chunks[i++]) };
+            },
+          };
+        },
+      },
+    });
+    const { result } = renderHook(() => useChat());
+    await act(async () => {
+      await result.current.sendMessage("test");
+    });
+    expect(result.current.messages[1].content).toBe("Hello world");
+  });
 });

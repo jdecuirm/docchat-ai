@@ -70,6 +70,29 @@ export function useChat() {
           }
         }
       }
+
+      // Flush any remaining buffer content when stream ends without trailing \n
+      if (buffer.trim()) {
+        if (buffer.startsWith("data: ")) {
+          const payload = buffer.slice(6);
+          if (pendingEvent === "citations") {
+            const sources = JSON.parse(payload);
+            updateLastAI((msg) => ({ ...msg, sources }));
+          } else if (pendingEvent === "error") {
+            const { message } = JSON.parse(payload);
+            updateLastAI((msg) => ({
+              ...msg,
+              content: `Error: ${message}`,
+              isError: true,
+            }));
+          } else {
+            updateLastAI((msg) => ({
+              ...msg,
+              content: msg.content + payload,
+            }));
+          }
+        }
+      }
     } catch (err) {
       updateLastAI((msg) => ({
         ...msg,
