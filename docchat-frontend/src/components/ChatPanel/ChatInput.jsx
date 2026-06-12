@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function ChatInput({ onSend, streaming }) {
   const [value, setValue] = useState("");
+  const textareaRef = useRef(null);
 
   const disabled = streaming || value.trim() === "";
 
@@ -10,6 +11,9 @@ export default function ChatInput({ onSend, streaming }) {
     if (!trimmed || streaming) return;
     onSend(trimmed);
     setValue("");
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
   }
 
   function handleKeyDown(e) {
@@ -19,21 +23,27 @@ export default function ChatInput({ onSend, streaming }) {
     }
   }
 
+  function handleInput(e) {
+    e.target.style.height = "auto";
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  }
+
   return (
     <div className="flex items-end gap-2 p-3 border-t border-accent-dim bg-surface">
       <textarea
+        ref={textareaRef}
         className={[
           "flex-1 resize-none rounded-lg px-3 py-2 text-sm",
           "bg-surface-raised text-text-primary",
           "placeholder:text-text-muted",
           "focus:outline-none focus:ring-1 focus:ring-accent",
-          "max-h-28 overflow-y-auto",
+          "min-h-[2.25rem] max-h-28 overflow-y-auto",
         ].join(" ")}
-        rows={1}
         placeholder="Ask anything…"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKeyDown}
+        onInput={handleInput}
         disabled={streaming}
         aria-label="Chat input"
       />
