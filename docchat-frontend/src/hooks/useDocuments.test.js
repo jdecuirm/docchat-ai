@@ -22,7 +22,7 @@ describe("useDocuments", () => {
     await act(async () => {});
     expect(result.current.documents).toEqual(["report.pdf"]);
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/documents/"),
+      expect.stringMatching(/\/documents\/$/),
     );
   });
 
@@ -73,7 +73,7 @@ describe("useDocuments", () => {
     });
 
     expect(mockFetch).toHaveBeenCalledWith(
-      expect.stringContaining("/documents/f.pdf"),
+      expect.stringMatching(/\/documents\/f\.pdf$/),
       expect.objectContaining({ method: "DELETE" }),
     );
     expect(result.current.documents).toEqual([]);
