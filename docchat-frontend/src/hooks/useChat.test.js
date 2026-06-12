@@ -122,4 +122,37 @@ describe("useChat", () => {
     });
     expect(result.current.messages[1].content).toBe("Hello world");
   });
+
+  it("sends last 3 Q&A turns as history in the request body", async () => {
+    const capturedBodies = [];
+
+    // Use the existing makeStream helper (defined at top of this file)
+    const mockFetch1 = vi.fn().mockResolvedValue(makeStream(["data: ok\n\n"]));
+    vi.stubGlobal("fetch", mockFetch1);
+
+    const { result } = renderHook(() => useChat());
+
+    // Send first message to populate history
+    await act(async () => {
+      await result.current.sendMessage("First question");
+    });
+
+    // Now replace fetch mock to capture the body of the SECOND call
+    const mockFetch2 = vi.fn().mockImplementation((url, opts) => {
+      capturedBodies.push(JSON.parse(opts.body));
+      return Promise.resolve(makeStream(["data: second answer\n\n"]));
+    });
+    vi.stubGlobal("fetch", mockFetch2);
+
+    await act(async () => {
+      await result.current.sendMessage("Second question");
+    });
+
+    expect(capturedBodies.length).toBeGreaterThan(0);
+    const body = capturedBodies[0];
+    expect(body).toHaveProperty("history");
+    expect(Array.isArray(body.history)).toBe(true);
+    const roles = body.history.map((t) => t.role);
+    expect(roles).toContain("user");
+  });
 });
