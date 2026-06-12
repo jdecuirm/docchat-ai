@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes_documents import router as documents_router
 from app.config import get_settings
 
 settings = get_settings()
@@ -40,3 +41,6 @@ async def health() -> dict[str, str]:
         A mapping with a single ``status`` key set to ``"ok"``.
     """
     return {"status": "ok"}
+
+
+app.include_router(documents_router, prefix="/documents", tags=["documents"])
