@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes_chat import router as chat_router
 from app.api.routes_documents import router as documents_router
 from app.config import get_settings
 
@@ -44,3 +45,4 @@ async def health() -> dict[str, str]:
 
 
 app.include_router(documents_router, prefix="/documents", tags=["documents"])
+app.include_router(chat_router, prefix="/chat", tags=["chat"])
