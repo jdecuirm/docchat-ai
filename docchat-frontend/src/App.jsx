@@ -1,3 +1,41 @@
+import Sidebar from "./components/Sidebar/Sidebar";
+import ChatPanel from "./components/ChatPanel/ChatPanel";
+import { useDocuments } from "./hooks/useDocuments";
+import { useChat } from "./hooks/useChat";
+
 export default function App() {
-  return <div>DocChat AI</div>;
+  const {
+    documents,
+    uploading,
+    error: uploadError,
+    upload,
+    remove,
+  } = useDocuments();
+  const { messages, streaming, sendMessage } = useChat();
+
+  return (
+    <div className="flex flex-col h-full bg-bg text-text-primary">
+      <header className="shrink-0 flex items-center px-5 py-3 bg-surface border-b border-accent-dim">
+        <h1 className="text-accent font-bold tracking-tight text-lg">
+          DocChat{" "}
+          <span className="text-text-muted font-normal text-sm">AI</span>
+        </h1>
+      </header>
+
+      <div className="flex flex-1 min-h-0">
+        <Sidebar
+          documents={documents}
+          uploading={uploading}
+          uploadError={uploadError}
+          onUpload={upload}
+          onDelete={remove}
+        />
+        <ChatPanel
+          messages={messages}
+          streaming={streaming}
+          onSend={sendMessage}
+        />
+      </div>
+    </div>
+  );
 }
