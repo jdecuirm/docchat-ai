@@ -82,7 +82,7 @@ async def test_rag_answer_returns_chunks_and_stream(monkeypatch) -> None:
     mock_client = MagicMock()
     mock_client.generate = fake_generate
 
-    monkeypatch.setattr(pipeline_module, "retrieve", lambda q: mock_chunks)
+    monkeypatch.setattr(pipeline_module, "retrieve", lambda q, where=None: mock_chunks)
     monkeypatch.setattr(pipeline_module, "get_llm_client", lambda: mock_client)
 
     chunks, stream = await rag_answer("What is Paris?")
@@ -116,3 +116,28 @@ def test_build_prompt_no_history_section_when_empty() -> None:
     for history in ([], None):
         prompt = build_prompt("Query?", [], history=history)
         assert "[Conversation history]" not in prompt
+
+
+async def test_rag_answer_passes_history_to_build_prompt(monkeypatch) -> None:
+    """rag_answer forwards history to build_prompt; prompt contains history."""
+    import app.rag.pipeline as pipeline_module
+    from app.rag.pipeline import ConversationTurn, rag_answer
+
+    captured_prompt: list[str] = []
+
+    async def fake_generate(prompt: str):
+        captured_prompt.append(prompt)
+        yield "answer"
+
+    mock_client = MagicMock()
+    mock_client.generate = fake_generate
+
+    history = [ConversationTurn(role="user", content="Prior question")]
+
+    monkeypatch.setattr(pipeline_module, "retrieve", lambda q, where=None: [])
+    monkeypatch.setattr(pipeline_module, "get_llm_client", lambda: mock_client)
+
+    _, stream = await rag_answer("Follow-up?", history=history)
+    _ = [t async for t in stream]  # consume to trigger generator body
+
+    assert any("Prior question" in p for p in captured_prompt)

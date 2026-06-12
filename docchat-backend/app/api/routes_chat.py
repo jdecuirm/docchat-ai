@@ -9,23 +9,27 @@ from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
-from app.rag.pipeline import rag_answer
+from app.rag.pipeline import ConversationTurn, rag_answer
 
 router = APIRouter()
 
 
 class _ChatRequest(BaseModel):
     question: str = Field(..., min_length=1, max_length=2000)
+    history: list[ConversationTurn] = []
 
 
-async def _event_stream(query: str) -> AsyncGenerator[str, None]:
+async def _event_stream(
+    query: str,
+    history: list[ConversationTurn],
+) -> AsyncGenerator[str, None]:
     """Yield SSE-formatted strings: token data events, then a citations event.
 
     On any exception mid-stream, yields an ``event: error`` event instead of
     propagating (HTTP status is already 200 at this point).
     """
     try:
-        chunks, stream = await rag_answer(query)
+        chunks, stream = await rag_answer(query, history)
         async for token in stream:
             yield f"data: {token}\n\n"
         citations = [chunk.model_dump() for chunk in chunks]
@@ -44,17 +48,15 @@ async def chat_stream(request: _ChatRequest) -> StreamingResponse:
     - ``event: citations`` — JSON array of source chunks after the last token
     - ``event: error`` — error description if generation fails mid-stream
 
-    The frontend must use ``fetch`` + ``ReadableStream`` (not the browser-native
-    ``EventSource`` API, which does not support POST).
-
     Args:
-        request: JSON body with a ``question`` field (1–2000 characters).
+        request: JSON body with ``question`` (required) and optional
+            ``history`` list of prior conversation turns.
 
     Returns:
         A ``text/event-stream`` streaming response.
     """
     return StreamingResponse(
-        _event_stream(request.question),
+        _event_stream(request.question, request.history),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )

@@ -7,6 +7,7 @@ from typing import AsyncGenerator, Literal
 from pydantic import BaseModel
 
 from app.llm import get_llm_client
+from app.rag.query_parser import parse_query_filters
 from app.retrieval import retrieve
 from app.retrieval.reranker import RankedChunk
 
@@ -91,6 +92,8 @@ async def rag_answer(
 ) -> tuple[list[RankedChunk], AsyncGenerator[str, None]]:
     """Retrieve relevant context and prepare a streaming LLM answer.
 
+    Applies a page-number filter when the query mentions a specific page.
+
     Args:
         query: The user's natural-language question.
         history: Previous conversation turns for context. Defaults to None.
@@ -99,7 +102,9 @@ async def rag_answer(
         ``(chunks, token_stream)`` where ``chunks`` are the re-ranked context
         chunks (used for citations) and ``token_stream`` yields LLM tokens.
     """
-    chunks = retrieve(query)
+
+    where_filter = parse_query_filters(query)
+    chunks = retrieve(query, where=where_filter)
     prompt = build_prompt(query, chunks, history=history)
     stream = get_llm_client().generate(prompt)
     return chunks, stream
