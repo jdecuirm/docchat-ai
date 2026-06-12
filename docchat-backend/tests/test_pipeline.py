@@ -26,7 +26,7 @@ def test_build_prompt_includes_chunk_text() -> None:
 
 
 def test_build_prompt_numbers_sources() -> None:
-    """Chunks are numbered [1], [2], etc. in order."""
+    """Chunks are numbered [1], [2], etc. in sequential order."""
     from app.rag.pipeline import build_prompt
 
     chunks = [_make_chunk("First chunk.", 1), _make_chunk("Second chunk.", 2)]
@@ -34,6 +34,7 @@ def test_build_prompt_numbers_sources() -> None:
 
     assert "[1]" in prompt
     assert "[2]" in prompt
+    assert prompt.index("[1]") < prompt.index("[2]")
 
 
 def test_build_prompt_empty_chunks() -> None:
@@ -52,3 +53,13 @@ def test_build_prompt_includes_query() -> None:
     prompt = build_prompt("What are the main risks?", [])
 
     assert "What are the main risks?" in prompt
+
+
+def test_build_prompt_includes_instructions() -> None:
+    """The assembled prompt always contains the grounding instructions."""
+    from app.rag.pipeline import build_prompt
+
+    prompt = build_prompt("Any question?", [])
+
+    assert "Answer ONLY using the context provided above." in prompt
+    assert "I couldn't find that in the documents." in prompt

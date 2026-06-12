@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from app.retrieval.reranker import RankedChunk
 
-__all__ = ["build_prompt", "rag_answer"]
+__all__ = ["build_prompt"]
 
 
 def build_prompt(query: str, chunks: list[RankedChunk]) -> str:
@@ -25,7 +25,7 @@ def build_prompt(query: str, chunks: list[RankedChunk]) -> str:
     """
     if chunks:
         context_section = "\n\n".join(
-            f"[{i + 1}] {chunk.source_filename}  p.{chunk.page_number} — {chunk.text}"
+            f"[{i + 1}] {chunk.source_filename} p.{chunk.page_number} — {chunk.text}"
             for i, chunk in enumerate(chunks)
         )
     else:
