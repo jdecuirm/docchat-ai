@@ -63,3 +63,30 @@ def test_build_prompt_includes_instructions() -> None:
 
     assert "Answer ONLY using the context provided above." in prompt
     assert "I couldn't find that in the documents." in prompt
+
+
+from unittest.mock import MagicMock
+
+
+async def test_rag_answer_returns_chunks_and_stream(monkeypatch) -> None:
+    """rag_answer returns (list[RankedChunk], async token stream)."""
+    import app.rag.pipeline as pipeline_module
+    from app.rag.pipeline import rag_answer
+
+    mock_chunks = [_make_chunk("Paris is the capital.")]
+
+    async def fake_generate(prompt: str):
+        yield "Hello"
+        yield " world"
+
+    mock_client = MagicMock()
+    mock_client.generate = fake_generate
+
+    monkeypatch.setattr(pipeline_module, "retrieve", lambda q: mock_chunks)
+    monkeypatch.setattr(pipeline_module, "get_llm_client", lambda: mock_client)
+
+    chunks, stream = await rag_answer("What is Paris?")
+
+    assert chunks == mock_chunks
+    tokens = [t async for t in stream]
+    assert tokens == ["Hello", " world"]

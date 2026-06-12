@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import AsyncGenerator
 
+from app.llm import get_llm_client
+from app.retrieval import retrieve
 from app.retrieval.reranker import RankedChunk
 
-__all__ = ["build_prompt"]
+__all__ = ["build_prompt", "rag_answer"]
 
 
 def build_prompt(query: str, chunks: list[RankedChunk]) -> str:
@@ -40,3 +43,26 @@ def build_prompt(query: str, chunks: list[RankedChunk]) -> str:
         "Do not speculate or add information beyond what is in the context.\n\n"
         f"Question: {query}"
     )
+
+
+async def rag_answer(
+    query: str,
+) -> tuple[list[RankedChunk], AsyncGenerator[str, None]]:
+    """Retrieve relevant context and prepare a streaming LLM answer.
+
+    Calls ``retrieve()`` synchronously (CPU-bound; acceptable at portfolio
+    load), assembles the RAG prompt, and returns both the context chunks and
+    the async token stream. The caller emits the citations SSE event after
+    draining the stream.
+
+    Args:
+        query: The user's natural-language question.
+
+    Returns:
+        ``(chunks, token_stream)`` where ``chunks`` are the re-ranked context
+        chunks (used for citations) and ``token_stream`` yields LLM tokens.
+    """
+    chunks = retrieve(query)
+    prompt = build_prompt(query, chunks)
+    stream = get_llm_client().generate(prompt)
+    return chunks, stream
