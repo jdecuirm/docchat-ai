@@ -2,40 +2,78 @@
 
 from __future__ import annotations
 
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Literal
+
+from pydantic import BaseModel
 
 from app.llm import get_llm_client
 from app.retrieval import retrieve
 from app.retrieval.reranker import RankedChunk
 
-__all__ = ["build_prompt", "rag_answer"]
+__all__ = ["ConversationTurn", "build_prompt", "rag_answer"]
 
 
-def build_prompt(query: str, chunks: list[RankedChunk]) -> str:
-    """Assemble a RAG prompt from re-ranked context chunks and a user query.
+class ConversationTurn(BaseModel):
+    """A single turn in the conversation history sent by the client.
 
-    Each chunk is formatted as ``[N] filename  p.X — <text>``. Fixed
-    instructions tell the LLM to answer only from context and cite with
-    ``[N]`` notation. When no chunks are available, a no-context message
-    replaces the context section.
+    Attributes:
+        role: Speaker — ``"user"`` or ``"assistant"``.
+        content: The full message text for this turn.
+    """
+
+    role: Literal["user", "assistant"]
+    content: str
+
+
+def build_prompt(
+    query: str,
+    chunks: list[RankedChunk],
+    history: list[ConversationTurn] | None = None,
+) -> str:
+    """Assemble a RAG prompt from conversation history, context chunks, and query.
+
+    Prompt structure (history section omitted when empty):
+
+        [Conversation history]
+        User: ...
+        Assistant: ...
+
+        [Context]
+        [1] filename p.N — text
+        ...
+
+        Answer ONLY using the context provided above. ...
+
+        Question: <query>
 
     Args:
         query: The user's natural-language question.
         chunks: Re-ranked context chunks from the retrieval pipeline.
+        history: Previous conversation turns, oldest first. Defaults to None.
 
     Returns:
         A fully assembled prompt string ready for the LLM.
     """
+    parts: list[str] = []
+
+    if history:
+        history_lines = "\n".join(
+            f"{'User' if turn.role == 'user' else 'Assistant'}: {turn.content}"
+            for turn in history
+        )
+        parts.append(f"[Conversation history]\n{history_lines}")
+
     if chunks:
-        context_section = "\n\n".join(
+        context_body = "\n\n".join(
             f"[{i + 1}] {chunk.source_filename} p.{chunk.page_number} — {chunk.text}"
             for i, chunk in enumerate(chunks)
         )
     else:
-        context_section = "No relevant context was found in the uploaded documents."
+        context_body = "No relevant context was found in the uploaded documents."
 
-    return (
-        f"{context_section}\n\n"
+    parts.append(f"[Context]\n{context_body}")
+
+    parts.append(
         "Answer ONLY using the context provided above.\n"
         "Cite sources inline using [N] notation.\n"
         "If the context does not contain enough information to answer the question, "
@@ -44,25 +82,24 @@ def build_prompt(query: str, chunks: list[RankedChunk]) -> str:
         f"Question: {query}"
     )
 
+    return "\n\n".join(parts)
+
 
 async def rag_answer(
     query: str,
+    history: list[ConversationTurn] | None = None,
 ) -> tuple[list[RankedChunk], AsyncGenerator[str, None]]:
     """Retrieve relevant context and prepare a streaming LLM answer.
 
-    Calls ``retrieve()`` synchronously (CPU-bound; acceptable at portfolio
-    load), assembles the RAG prompt, and returns both the context chunks and
-    the async token stream. The caller emits the citations SSE event after
-    draining the stream.
-
     Args:
         query: The user's natural-language question.
+        history: Previous conversation turns for context. Defaults to None.
 
     Returns:
         ``(chunks, token_stream)`` where ``chunks`` are the re-ranked context
         chunks (used for citations) and ``token_stream`` yields LLM tokens.
     """
     chunks = retrieve(query)
-    prompt = build_prompt(query, chunks)
+    prompt = build_prompt(query, chunks, history=history)
     stream = get_llm_client().generate(prompt)
     return chunks, stream

@@ -90,3 +90,29 @@ async def test_rag_answer_returns_chunks_and_stream(monkeypatch) -> None:
     assert chunks == mock_chunks
     tokens = [t async for t in stream]
     assert tokens == ["Hello", " world"]
+
+
+def test_build_prompt_includes_history() -> None:
+    """History turns appear before the context section."""
+    from app.rag.pipeline import ConversationTurn, build_prompt
+
+    history = [
+        ConversationTurn(role="user", content="What is this document about?"),
+        ConversationTurn(role="assistant", content="It is about pipe-sticking."),
+    ]
+    prompt = build_prompt("Tell me more.", [], history=history)
+
+    assert "[Conversation history]" in prompt
+    assert "User: What is this document about?" in prompt
+    assert "Assistant: It is about pipe-sticking." in prompt
+    # History must appear before context
+    assert prompt.index("[Conversation history]") < prompt.index("[Context]")
+
+
+def test_build_prompt_no_history_section_when_empty() -> None:
+    """No history section rendered when history is empty or None."""
+    from app.rag.pipeline import build_prompt
+
+    for history in ([], None):
+        prompt = build_prompt("Query?", [], history=history)
+        assert "[Conversation history]" not in prompt
