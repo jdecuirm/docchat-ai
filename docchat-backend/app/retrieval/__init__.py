@@ -14,15 +14,18 @@ def retrieve(
     query: str,
     top_k_retrieval: int | None = None,
     top_k_rerank: int | None = None,
+    where: dict | None = None,
 ) -> list[RankedChunk]:
     """Embed a query, find candidate chunks, and re-rank them.
 
     Args:
         query: The user's natural-language search query.
         top_k_retrieval: Candidates to pull from ChromaDB. Defaults to
-            ``settings.top_k_retrieval`` (10).
+            ``settings.top_k_retrieval`` (15 after Stage H).
         top_k_rerank: Results to keep after re-ranking. Defaults to
             ``settings.top_k_rerank`` (4).
+        where: Optional ChromaDB metadata filter forwarded to
+            :meth:`VectorStore.query`. ``None`` means no filter.
 
     Returns:
         Up to ``top_k_rerank`` :class:`RankedChunk` objects ordered by
@@ -35,5 +38,5 @@ def retrieve(
     k_rerank = top_k_rerank if top_k_rerank is not None else settings.top_k_rerank
 
     embedding = embed_query(query)
-    candidates = get_vector_store().query(embedding, top_k=k_retrieval)
+    candidates = get_vector_store().query(embedding, top_k=k_retrieval, where=where)
     return rerank(query, candidates, top_k=k_rerank)

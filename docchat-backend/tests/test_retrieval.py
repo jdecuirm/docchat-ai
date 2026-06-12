@@ -8,8 +8,6 @@ from __future__ import annotations
 
 import pytest
 
-pytestmark = pytest.mark.slow
-
 
 @pytest.fixture()
 def populated_store(tmp_path):
@@ -39,6 +37,7 @@ def populated_store(tmp_path):
     return store
 
 
+@pytest.mark.slow
 def test_retrieve_returns_ranked_chunks(populated_store, monkeypatch) -> None:
     """retrieve() returns a non-empty list of RankedChunk objects."""
     import app.retrieval as retrieval_module
@@ -54,6 +53,7 @@ def test_retrieve_returns_ranked_chunks(populated_store, monkeypatch) -> None:
     assert all(isinstance(c, RankedChunk) for c in result)
 
 
+@pytest.mark.slow
 def test_retrieve_respects_top_k_rerank(populated_store, monkeypatch) -> None:
     """retrieve() returns at most top_k_rerank results."""
     import app.retrieval as retrieval_module
@@ -66,6 +66,7 @@ def test_retrieve_respects_top_k_rerank(populated_store, monkeypatch) -> None:
     assert len(result) <= 2
 
 
+@pytest.mark.slow
 def test_retrieve_empty_store(tmp_path, monkeypatch) -> None:
     """retrieve() returns [] when the vector store has no documents."""
     import app.retrieval as retrieval_module
@@ -78,3 +79,27 @@ def test_retrieve_empty_store(tmp_path, monkeypatch) -> None:
     result = retrieve("anything")
 
     assert result == []
+
+
+def test_retrieve_passes_where_to_vector_store(monkeypatch) -> None:
+    """retrieve() forwards the where filter to vector_store.query()."""
+    import app.retrieval as retrieval_module
+    from app.retrieval import retrieve
+
+    captured: dict = {}
+
+    def fake_embed(text: str) -> list[float]:
+        return [0.1] * 384
+
+    class FakeStore:
+        def query(self, embedding, top_k, where=None):
+            captured["where"] = where
+            return []
+
+    monkeypatch.setattr(retrieval_module, "embed_query", fake_embed)
+    monkeypatch.setattr(retrieval_module, "get_vector_store", lambda: FakeStore())
+    monkeypatch.setattr(retrieval_module, "rerank", lambda q, chunks, top_k: chunks)
+
+    retrieve("What is on page 3?", where={"page_number": {"$eq": 3}})
+
+    assert captured["where"] == {"page_number": {"$eq": 3}}
