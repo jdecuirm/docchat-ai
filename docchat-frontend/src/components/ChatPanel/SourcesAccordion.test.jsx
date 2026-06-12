@@ -3,8 +3,8 @@ import { describe, it, expect } from "vitest";
 import SourcesAccordion from "./SourcesAccordion";
 
 const SOURCES = [
-  { filename: "report.pdf", page: 3, score: 0.91 },
-  { filename: "notes.docx", page: 1, score: 0.78 },
+  { source_filename: "report.pdf", page_number: 3, relevance_score: 0.91 },
+  { source_filename: "notes.docx", page_number: 1, relevance_score: 0.78 },
 ];
 
 describe("SourcesAccordion", () => {
