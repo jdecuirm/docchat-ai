@@ -114,3 +114,36 @@ def test_multiple_documents_listed(store: VectorStore) -> None:
     docs = store.list_documents()
     assert "a.pdf" in docs
     assert "b.pdf" in docs
+
+
+def test_query_with_where_filter(store: VectorStore) -> None:
+    """query() with a where filter returns only matching chunks."""
+    store.add_chunks(
+        [make_chunk("doc_p1.pdf", 1, page=1, text="page one content")],
+        [make_embedding(seed=0.1)],
+    )
+    store.add_chunks(
+        [make_chunk("doc_p2.pdf", 1, page=2, text="page two content")],
+        [make_embedding(seed=0.2)],
+    )
+
+    results = store.query(
+        make_embedding(seed=0.1),
+        top_k=10,
+        where={"page_number": {"$eq": 1}},
+    )
+
+    assert len(results) >= 1
+    assert all(r.page_number == 1 for r in results)
+
+
+def test_clear_collection_removes_all_chunks(store: VectorStore) -> None:
+    """clear_collection() empties the store; subsequent query returns []."""
+    chunks = [make_chunk("a.pdf", 1), make_chunk("b.pdf", 1)]
+    store.add_chunks([chunks[0]], [make_embedding(seed=0.1)])
+    store.add_chunks([chunks[1]], [make_embedding(seed=0.2)])
+
+    store.clear_collection()
+
+    assert store.list_documents() == []
+    assert store.query(make_embedding(), top_k=10) == []

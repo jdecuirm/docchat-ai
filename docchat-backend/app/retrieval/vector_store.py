@@ -80,8 +80,7 @@ class VectorStore:
         self.delete_document(filename)
 
         ids = [
-            f"{c.metadata.source_filename}::{c.metadata.chunk_index}"
-            for c in chunks
+            f"{c.metadata.source_filename}::{c.metadata.chunk_index}" for c in chunks
         ]
         documents = [c.text for c in chunks]
         metadatas = [
@@ -134,16 +133,30 @@ class VectorStore:
             self._collection.delete(ids=ids)
         return len(ids)
 
+    def clear_collection(self) -> None:
+        """Delete all chunks from the collection.
+
+        Used by the migration script and tests. Not called automatically.
+        """
+        result = self._collection.get(include=[])
+        ids = result["ids"]
+        if ids:
+            self._collection.delete(ids=ids)
+
     def query(
         self,
         embedding: list[float],
         top_k: int,
+        where: dict | None = None,
     ) -> list[RetrievedChunk]:
         """Find the most similar chunks for a query embedding.
 
         Args:
             embedding: Query vector (must match collection dimensionality).
             top_k: Maximum number of results to return.
+            where: Optional ChromaDB metadata filter, e.g.
+                ``{"page_number": {"$eq": 6}}``. When ``None``, no filter
+                is applied.
 
         Returns:
             List of :class:`RetrievedChunk` ordered by ascending distance.
@@ -152,11 +165,15 @@ class VectorStore:
         if n_results == 0:
             return []
 
-        result = self._collection.query(
-            query_embeddings=[embedding],
-            n_results=n_results,
-            include=["documents", "metadatas", "distances"],
-        )
+        kwargs: dict = {
+            "query_embeddings": [embedding],
+            "n_results": n_results,
+            "include": ["documents", "metadatas", "distances"],
+        }
+        if where is not None:
+            kwargs["where"] = where
+
+        result = self._collection.query(**kwargs)
 
         retrieved: list[RetrievedChunk] = []
         for doc, meta, dist in zip(
