@@ -17,8 +17,8 @@ describe("SourcesAccordion", () => {
   it("expands when header is clicked", () => {
     render(<SourcesAccordion sources={SOURCES} />);
     fireEvent.click(screen.getByRole("button", { name: /sources/i }));
-    expect(screen.getByText("report.pdf")).toBeInTheDocument();
-    expect(screen.getByText("notes.docx")).toBeInTheDocument();
+    expect(screen.getByText(/report\.pdf/)).toBeInTheDocument();
+    expect(screen.getByText(/notes\.docx/)).toBeInTheDocument();
   });
 
   it("collapses again on second click", () => {

@@ -11,9 +11,7 @@ export default function AIBubble({ message }) {
       >
         {message.content || <span className="opacity-50">…</span>}
       </div>
-      {message.sources && message.sources.length > 0 && (
-        <SourcesAccordion sources={message.sources} />
-      )}
+      <SourcesAccordion sources={message.sources} />
     </div>
   );
 }

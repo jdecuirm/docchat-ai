@@ -17,8 +17,8 @@ export function useChat() {
   const sendMessage = useCallback(async (question) => {
     setMessages((prev) => [
       ...prev,
-      { role: "user", content: question },
-      { role: "ai", content: "", sources: [] },
+      { role: "user", content: question, id: crypto.randomUUID() },
+      { role: "ai", content: "", sources: [], id: crypto.randomUUID() },
     ]);
     setStreaming(true);
 

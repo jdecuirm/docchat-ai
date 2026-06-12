@@ -20,8 +20,8 @@ export default function MessageList({ messages }) {
 
   return (
     <div className="flex-1 overflow-y-auto flex flex-col gap-4 px-4 py-4">
-      {messages.map((msg, i) => (
-        <Message key={i} message={msg} />
+      {messages.map((msg) => (
+        <Message key={msg.id} message={msg} />
       ))}
       <div ref={bottomRef} />
     </div>
