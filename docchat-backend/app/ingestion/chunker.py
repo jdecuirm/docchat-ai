@@ -4,9 +4,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pydantic import BaseModel, Field
-from transformers import AutoTokenizer
 
 from app.config import get_settings
 from app.ingestion.parser import ParsedDocument, ParsedPage
@@ -43,12 +41,10 @@ class Chunk(BaseModel):
 
 
 @lru_cache(maxsize=1)
-def _get_tokenizer() -> AutoTokenizer:
-    """Load and cache the embedding model tokenizer.
+def _get_tokenizer():
+    """Load and cache the embedding model tokenizer."""
+    from transformers import AutoTokenizer
 
-    Returns:
-        The cached AutoTokenizer instance for the configured embedding model.
-    """
     settings = get_settings()
     return AutoTokenizer.from_pretrained(settings.embedding_model)
 
@@ -116,6 +112,8 @@ def chunk_document(parsed: ParsedDocument) -> list[Chunk]:
 
     full_text = _PAGE_SEPARATOR.join(page.text for page in parsed.pages)
     page_ranges = _build_page_ranges(parsed.pages, _PAGE_SEPARATOR)
+
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
 
     tokenizer = _get_tokenizer()
     splitter = RecursiveCharacterTextSplitter.from_huggingface_tokenizer(

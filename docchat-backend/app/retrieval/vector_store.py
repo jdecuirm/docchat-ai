@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-import chromadb
 from pydantic import BaseModel
 
 from app.config import get_settings
@@ -47,6 +46,8 @@ class VectorStore:
         Args:
             persist_dir: Directory path where ChromaDB persists data on disk.
         """
+        import chromadb
+
         self._client = chromadb.PersistentClient(path=persist_dir)
         self._collection = self._client.get_or_create_collection(
             name=_COLLECTION_NAME,
