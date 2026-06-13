@@ -13,7 +13,7 @@ from app.retrieval.vector_store import get_vector_store
 
 router = APIRouter()
 
-_MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+_MAX_UPLOAD_BYTES = 50 * 1024 * 1024  # 50 MB
 _ALLOWED_EXTENSIONS = {".pdf", ".docx"}
 
 
@@ -31,14 +31,14 @@ async def upload_document(file: UploadFile) -> IngestionResult:
     """Parse, chunk, embed, and store an uploaded document.
 
     Args:
-        file: Multipart file upload. Accepted formats: PDF, DOCX. Max 10 MB.
+        file: Multipart file upload. Accepted formats: PDF, DOCX. Max 50 MB.
 
     Returns:
         Ingestion summary with filename, chunk count, and total character count.
 
     Raises:
         HTTPException 400: Unsupported file format.
-        HTTPException 413: File exceeds 10 MB.
+        HTTPException 413: File exceeds 50 MB.
         HTTPException 422: Document is empty or could not be parsed.
     """
     suffix = Path(file.filename or "").suffix.lower()
@@ -52,7 +52,7 @@ async def upload_document(file: UploadFile) -> IngestionResult:
     if len(content) > _MAX_UPLOAD_BYTES:
         raise HTTPException(
             status_code=413,
-            detail="File too large. Maximum upload size is 10 MB.",
+            detail="File too large. Maximum upload size is 50 MB.",
         )
 
     try:
