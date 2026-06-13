@@ -10,7 +10,7 @@ export default function Sidebar({
   onDelete,
 }) {
   return (
-    <aside className="w-72 shrink-0 flex flex-col gap-4 p-4 bg-surface h-full overflow-y-auto">
+    <aside className="w-72 shrink-0 flex flex-col gap-4 p-4 bg-surface border-r border-accent-dim h-full overflow-y-auto">
       <h2 className="text-accent text-xs font-bold uppercase tracking-widest">
         Documents
       </h2>

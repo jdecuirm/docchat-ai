@@ -15,10 +15,12 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-full bg-bg text-text-primary">
-      <header className="shrink-0 flex items-center px-5 py-3 bg-surface border-b border-accent-dim">
+      <header className="shrink-0 flex items-center px-5 py-3 bg-white border-b border-accent-dim shadow-sm">
         <h1 className="text-accent font-bold tracking-tight text-lg">
-          DocChat{" "}
-          <span className="text-text-muted font-normal text-sm">AI</span>
+          DocChat
+          <span className="ml-1.5 text-xs font-semibold text-white bg-accent px-1.5 py-0.5 rounded-full align-middle">
+            AI
+          </span>
         </h1>
       </header>
 

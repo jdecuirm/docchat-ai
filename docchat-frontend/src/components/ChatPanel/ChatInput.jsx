@@ -1,10 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function ChatInput({ onSend, streaming }) {
   const [value, setValue] = useState("");
   const textareaRef = useRef(null);
 
   const disabled = streaming || value.trim() === "";
+
+  useEffect(() => {
+    if (!streaming && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [streaming]);
 
   function submit() {
     const trimmed = value.trim();
@@ -35,8 +41,8 @@ export default function ChatInput({ onSend, streaming }) {
         className={[
           "flex-1 resize-none rounded-lg px-3 py-2 text-sm",
           "bg-surface-raised text-text-primary",
-          "placeholder:text-text-muted",
-          "focus:outline-none focus:ring-1 focus:ring-accent",
+          "border border-accent-dim placeholder:text-text-muted",
+          "focus:outline-none focus:ring-2 focus:ring-accent focus:border-accent",
           "min-h-[2.25rem] max-h-28 overflow-y-auto",
         ].join(" ")}
         placeholder="Ask anything…"
