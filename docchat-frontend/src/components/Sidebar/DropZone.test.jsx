@@ -41,19 +41,18 @@ describe("DropZone", () => {
     expect(screen.getByText(/only pdf and docx/i)).toBeInTheDocument();
   });
 
-  it("shows error and does not call onUpload when file exceeds 10 MB", () => {
+  it("shows error and does not call onUpload when file exceeds 50 MB", () => {
     const onUpload = vi.fn();
     render(<DropZone onUpload={onUpload} />);
     const zone = screen.getByTestId("drop-zone");
-    // Create a file with size > 10MB (10 * 1024 * 1024 + 1 bytes)
     const oversized = new File(["x".repeat(1)], "big.pdf", {
       type: "application/pdf",
     });
-    Object.defineProperty(oversized, "size", { value: 10 * 1024 * 1024 + 1 });
+    Object.defineProperty(oversized, "size", { value: 50 * 1024 * 1024 + 1 });
     fireEvent.drop(zone, {
       dataTransfer: { files: [oversized], types: ["Files"] },
     });
     expect(onUpload).not.toHaveBeenCalled();
-    expect(screen.getByText(/10 mb/i)).toBeInTheDocument();
+    expect(screen.getByText(/50 mb/i)).toBeInTheDocument();
   });
 });

@@ -15,8 +15,8 @@ export default function DropZone({ onUpload }) {
       setError("Only PDF and DOCX files are allowed.");
       return false;
     }
-    if (file.size > 10 * 1024 * 1024) {
-      setError("File exceeds the 10 MB limit.");
+    if (file.size > 50 * 1024 * 1024) {
+      setError("File exceeds the 50 MB limit.");
       return false;
     }
     setError(null);
