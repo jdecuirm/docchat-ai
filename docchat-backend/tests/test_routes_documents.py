@@ -30,7 +30,7 @@ def test_upload_pdf_success(client: TestClient, monkeypatch) -> None:
 
     response = client.post(
         "/documents/upload",
-        files={"file": ("report.pdf", b"fake pdf content", "application/pdf")},
+        files={"file": ("report.pdf", b"%PDF-fake pdf content", "application/pdf")},
     )
 
     assert response.status_code == 200
@@ -60,14 +60,17 @@ def test_upload_empty_document(client: TestClient, monkeypatch) -> None:
 
     response = client.post(
         "/documents/upload",
-        files={"file": ("empty.pdf", b"fake pdf", "application/pdf")},
+        files={"file": ("empty.pdf", b"%PDF-fake", "application/pdf")},
     )
     assert response.status_code == 422
 
 
-def test_upload_file_too_large(client: TestClient) -> None:
-    """POST /documents/upload with a file > 10 MB returns 413."""
-    oversized_content = b"x" * (10 * 1024 * 1024 + 1)
+def test_upload_file_too_large(client: TestClient, monkeypatch) -> None:
+    """POST /documents/upload with a file exceeding the size limit returns 413."""
+    import app.api.routes_documents as routes_module
+
+    monkeypatch.setattr(routes_module, "_MAX_UPLOAD_BYTES", 10)
+    oversized_content = b"%PDF-" + b"x" * 20
 
     response = client.post(
         "/documents/upload",

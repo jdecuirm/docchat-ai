@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import AsyncGenerator
 
 from fastapi import APIRouter
@@ -10,6 +11,8 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from app.rag.pipeline import ConversationTurn, rag_answer
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -34,8 +37,9 @@ async def _event_stream(
             yield f"data: {token}\n\n"
         citations = [chunk.model_dump() for chunk in chunks]
         yield f"event: citations\ndata: {json.dumps(citations)}\n\n"
-    except Exception as exc:
-        yield f"event: error\ndata: {json.dumps({'message': str(exc)})}\n\n"
+    except Exception:
+        logger.exception("chat stream failed")
+        yield f"event: error\ndata: {json.dumps({'message': 'Generation failed. Please try again.'})}\n\n"
 
 
 @router.post("/stream")
@@ -46,7 +50,7 @@ async def chat_stream(request: _ChatRequest) -> StreamingResponse:
 
     - ``data: <token>`` — one event per LLM output token
     - ``event: citations`` — JSON array of source chunks after the last token
-    - ``event: error`` — error description if generation fails mid-stream
+    - ``event: error`` — generic error message if generation fails mid-stream
 
     Args:
         request: JSON body with ``question`` (required) and optional

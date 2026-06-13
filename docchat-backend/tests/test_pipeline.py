@@ -26,15 +26,15 @@ def test_build_prompt_includes_chunk_text() -> None:
 
 
 def test_build_prompt_numbers_sources() -> None:
-    """Chunks are numbered [1], [2], etc. in sequential order."""
+    """Chunks are labelled with sequential ids in the XML source tags."""
     from app.rag.pipeline import build_prompt
 
     chunks = [_make_chunk("First chunk.", 1), _make_chunk("Second chunk.", 2)]
     prompt = build_prompt("Query?", chunks)
 
-    assert "[1]" in prompt
-    assert "[2]" in prompt
-    assert prompt.index("[1]") < prompt.index("[2]")
+    assert 'id="1"' in prompt
+    assert 'id="2"' in prompt
+    assert prompt.index('id="1"') < prompt.index('id="2"')
 
 
 def test_build_prompt_empty_chunks() -> None:
@@ -61,7 +61,7 @@ def test_build_prompt_includes_instructions() -> None:
 
     prompt = build_prompt("Any question?", [])
 
-    assert "Answer ONLY using the context provided above." in prompt
+    assert "Answer questions using ONLY the information" in prompt
     assert "I couldn't find that in the documents." in prompt
 
 
