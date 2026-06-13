@@ -9,8 +9,6 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from sentence_transformers import SentenceTransformer
-
 from app.config import get_settings
 
 __all__ = ["embed_texts", "embed_query"]
@@ -21,12 +19,10 @@ _BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 
 @lru_cache(maxsize=1)
-def _get_model() -> SentenceTransformer:
-    """Load and cache the sentence-transformer model.
+def _get_model():
+    """Load and cache the sentence-transformer model."""
+    from sentence_transformers import SentenceTransformer
 
-    Returns:
-        The cached :class:`SentenceTransformer` instance.
-    """
     settings = get_settings()
     return SentenceTransformer(settings.embedding_model)
 

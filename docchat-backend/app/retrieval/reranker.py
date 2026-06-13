@@ -10,7 +10,6 @@ from __future__ import annotations
 from functools import lru_cache
 
 from pydantic import BaseModel
-from sentence_transformers import CrossEncoder
 
 from app.config import get_settings
 from app.retrieval.vector_store import RetrievedChunk
@@ -39,12 +38,10 @@ class RankedChunk(BaseModel):
 
 
 @lru_cache(maxsize=1)
-def _get_reranker() -> CrossEncoder:
-    """Load and cache the BGE cross-encoder model.
+def _get_reranker():
+    """Load and cache the BGE cross-encoder model."""
+    from sentence_transformers import CrossEncoder
 
-    Returns:
-        The cached :class:`CrossEncoder` instance.
-    """
     settings = get_settings()
     return CrossEncoder(settings.reranker_model)
 
