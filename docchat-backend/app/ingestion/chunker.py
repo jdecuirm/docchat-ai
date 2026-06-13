@@ -42,11 +42,14 @@ class Chunk(BaseModel):
 
 @lru_cache(maxsize=1)
 def _get_tokenizer():
-    """Load and cache the embedding model tokenizer."""
-    from transformers import AutoTokenizer
+    """Load and cache the tokenizer via the shared SentenceTransformer instance.
 
-    settings = get_settings()
-    return AutoTokenizer.from_pretrained(settings.embedding_model)
+    Reuses the already-loaded embedding model's tokenizer instead of loading
+    a separate AutoTokenizer, keeping only one copy of the weights in memory.
+    """
+    from app.ingestion.embedder import _get_model
+
+    return _get_model().tokenizer
 
 
 def _build_page_ranges(
