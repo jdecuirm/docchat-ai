@@ -14,8 +14,8 @@ from typing import Any, Literal
 from pydantic import Field, SecretStr, field_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic_settings.sources.providers.dotenv import DotEnvSettingsSource
 from pydantic_settings.sources.base import PydanticBaseSettingsSource
+from pydantic_settings.sources.providers.dotenv import DotEnvSettingsSource
 
 
 class _TolerantDotEnvSource(DotEnvSettingsSource):
