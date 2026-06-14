@@ -19,6 +19,17 @@ export default function Sidebar({
 
       {uploadError && <p className="text-red-400 text-xs">{uploadError}</p>}
 
+      <div className="rounded-lg border border-accent-dim bg-surface-raised p-3 text-xs text-text-muted space-y-1">
+        <p className="font-semibold text-accent">⚡ Demo</p>
+        <p>
+          Keep PDFs to <strong>5–10 pages</strong> — larger files may time out
+          on the free tier.
+        </p>
+        <p>
+          First upload can take <strong>~30 s</strong> while models warm up.
+        </p>
+      </div>
+
       <DocumentList documents={documents} onDelete={onDelete} />
     </aside>
   );

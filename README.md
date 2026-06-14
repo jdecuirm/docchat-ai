@@ -6,6 +6,18 @@ A RAG (Retrieval-Augmented Generation) chatbot that lets you upload PDF and DOCX
 
 ---
 
+## Live demo
+
+**<https://docchat-ai-frontend.onrender.com>**
+
+> **Demo constraints** — this instance runs on Railway's Hobby tier (CPU-only, no GPU):
+>
+> - Upload PDFs or DOCX files up to **5–10 pages**. Larger documents take longer to embed and may time out on the free tier.
+> - The **first upload after a cold start** can take ~30 s while the embedding and reranker models load into memory. Subsequent requests are fast.
+> - ChromaDB storage is ephemeral on Railway — uploaded documents are lost on redeploy.
+
+---
+
 ## Features
 
 - **Document ingestion** — Upload PDF and DOCX files (up to 50 MB). Text is parsed, chunked, embedded, and stored in a persistent vector database.
@@ -125,6 +137,7 @@ No code changes required.
 
 ## Usage tips
 
+- **For the live demo**, keep uploads to 5–10 pages. Running locally has no such constraint.
 - Upload one or more PDFs or DOCX files using the sidebar drop zone.
 - Ask specific questions using vocabulary likely to appear in the document.
 - Page references work: _"What does page 5 say about deliverables?"_
